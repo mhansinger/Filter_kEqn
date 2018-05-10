@@ -56,6 +56,7 @@ def distance(dns_y,dns_z,les_y,les_z):
     # helper function
     return np.sqrt((dns_y-les_y)**2 + (dns_z - les_z)**2)
 
+
 def matchCenters(DNS_points,LES_points,factor=9):
     # this routine finds the nearest DNS cell centers for each LES cell
     # factor determines how many DNS centers are considered for each LES cell center
@@ -70,18 +71,20 @@ def matchCenters(DNS_points,LES_points,factor=9):
         # generate a list to store the nearest points
         # filled with tuples: 1. entry is distance, 2. the point number of DNS
         nearest_points = [(1e5,i) for i in range(1,factor+1)]
+        #print(nearest_points)
 
         for d in range(0,DNS_points.shape[1]):
             dns_y = DNS_points[0,d]
             dns_z = DNS_points[1,d]
 
             dist = distance(dns_y,dns_z,les_y,les_z)
+            #print(dist)
 
             # now check if distance is closer then the farest point (last one in list of tuples)?
             # if so overwrite that one and sort it in descending order (nearest is first entry in list)
             if dist<nearest_points[-1][0]:
                 nearest_points[-1] = (dist,d)
-                sorted(nearest_points)
+                nearest_points.sort(key = lambda tup : tup[0])
 
         LES_match_list.append(nearest_points)
 

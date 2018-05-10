@@ -202,5 +202,5 @@ writeU(data_points=data_points_new,pfy=pfy,pfz=pfz,y=y,z=z)
 
 # interpolate and write the new scalar fields
 writeScalar(data_points=data_points_new,scalar='CH4', pfy=pfy,pfz=pfz,y=y,z=z)
-#writeScalar(data_points=data_points_new,scalar='O2', pfy=pfy,pfz=pfz,y=y,z=z)
-#writeScalar(data_points=data_points_new,scalar='N2', pfy=pfy,pfz=pfz,y=y,z=z)
+writeScalar(data_points=data_points_new,scalar='O2', pfy=pfy,pfz=pfz,y=y,z=z)
+writeScalar(data_points=data_points_new,scalar='N2', pfy=pfy,pfz=pfz,y=y,z=z)

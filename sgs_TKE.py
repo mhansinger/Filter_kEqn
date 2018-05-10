@@ -12,7 +12,8 @@ import pandas as pd
 import os, sys
 from scipy.interpolate import griddata
 from numba import jit, njit
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+from numba import jit
 
 # VARIABLES
 
@@ -52,9 +53,12 @@ def readPointsVector(filename='points_precursor',header=0,data_points=data_point
     np_yz = np.asarray((y,z))
     return np_yz
 
+@jit
 def distance(dns_y,dns_z,les_y,les_z):
     # helper function
     return np.sqrt((dns_y-les_y)**2 + (dns_z - les_z)**2)
+
+
 
 
 def matchCenters(DNS_points,LES_points,factor=9):
@@ -63,6 +67,7 @@ def matchCenters(DNS_points,LES_points,factor=9):
     # e.g. factor = 9: assign the 9 closest DNS cell/face centers to an LES cell
 
     LES_match_list = []
+
 
     for l in range(0,LES_points.shape[1]):
         les_y = LES_points[0,l]
@@ -92,3 +97,51 @@ def matchCenters(DNS_points,LES_points,factor=9):
 
     return LES_match_list
 
+
+def computeTKE_LES(LES_match_list,U_DNS_list,cells=9,nrLES = data_points_new):
+
+    TKE_list = np.zeros(nrLES)
+
+    for i, pair in enumerate(LES_match_list):
+        DNS_points = np.zeros(cells)
+        U_points = np.zeros(cells)
+
+        for p in range(0,cells):
+            this_point = pair[p][1]
+            DNS_points[p]= pair[p][1]
+            # CHECKEN!
+            U_points[p] = U_DNS_list[this_point,0]
+            V_points[p] = U_DNS_list[this_point,1]
+            W_points[p] = U_DNS_list[this_point,2]
+
+        U_mean = U_points.mean()
+        V_mean = V_points.mean()
+        W_mean = W_points.mean()
+
+        uprime = vprime = wprime = 0
+
+        for p in range(0,cells):
+            uprime += (U_points[p] - U_mean) ** 2
+            vprime += (V_points[p]- V_mean) ** 2
+            wprime += (W_points[p] - W_mean) ** 2
+
+        TKE = (uprime + vprime + wprime) / (2*cells)
+
+        TKE_list[i] = TKE
+
+    return TKE_list
+
+
+
+
+LES_points = readPointsVector(filename='points_coarse',header=0,data_points=3300)
+DNS_points = readPointsVector(filename='points_final',header=0,data_points=data_points_org)
+
+DNS_points *= 0.001
+
+thisList = matchCenters(DNS_points,LES_points,factor=9)
+
+
+plt.plot(DNS_points[0,:],DNS_points[1,:],'.r')
+plt.plot(LES_points[0,:],LES_points[1,:],'.k')
+plt.show()

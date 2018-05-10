@@ -97,7 +97,7 @@ def matchCenters(DNS_points,LES_points,factor=9):
 
     return LES_match_list
 
-
+@jit
 def computeTKE_LES(LES_match_list,U_DNS_list,cells=9,nrLES = data_points_new):
 
     TKE_list = np.zeros(nrLES)
@@ -107,12 +107,12 @@ def computeTKE_LES(LES_match_list,U_DNS_list,cells=9,nrLES = data_points_new):
         U_points = np.zeros(cells)
 
         for p in range(0,cells):
-            this_point = pair[p][1]
+            dns_point = pair[p][1]
             DNS_points[p]= pair[p][1]
             # CHECKEN!
-            U_points[p] = U_DNS_list[this_point,0]
-            V_points[p] = U_DNS_list[this_point,1]
-            W_points[p] = U_DNS_list[this_point,2]
+            U_points[p] = U_DNS_list[dns_point,0]
+            V_points[p] = U_DNS_list[dns_point,1]
+            W_points[p] = U_DNS_list[dns_point,2]
 
         U_mean = U_points.mean()
         V_mean = V_points.mean()

@@ -334,6 +334,3 @@ DNS_yz  =np.array([dns_y,dns_z])
 LES_match_list = matchCenters(DNS_points=DNS_yz ,LES_points=LES_yz,cells=9)
 writeTKE(LES_match_list)
 
-#plt.plot(DNS_points[0,:],DNS_points[1,:],'.r')
-#plt.plot(LES_points[0,:],LES_points[1,:],'.k')
-#plt.show()

@@ -1,7 +1,7 @@
 '''
 This script is to compute sgs TKE in form of k from high resolved inflow data for coarser grids
 
-k_sgs = 1/2 (<u'^2_x> + <u'^2_y> + <u'^2_z>)
+k_sgs = 1/2 (<u'_x^2> + <u'_y^2> + <u'_z^2>)
 
 author: mahansinger
 
@@ -81,7 +81,7 @@ def readPointsScalar(filename='points_precursor',header=0,data_points=data_point
     return np_x
 
 
-def writePointsScalar(header_name='headerPoints.txt', out_path='BC_final/points', Value=None):
+def writePointsScalar(header_name='headerPoints.txt', out_path='BC_final/FUEL/points', Value=None):
     size_x = len(Value)
     # file to read
     fout = open(out_path, 'w')
@@ -104,7 +104,7 @@ def writePointsScalar(header_name='headerPoints.txt', out_path='BC_final/points'
         fout.close()
 
 
-def writePointsVector(header_name='headerPoints.txt',out_path='BC_final/points', x=None,y=None,z=None):
+def writePointsVector(header_name='headerPoints.txt',out_path='BC_final/FUEL/points', x=None,y=None,z=None):
 
     size_x=len(x)
     # file to read
@@ -149,7 +149,7 @@ def writeU(data_points=data_points_LES,pfy=None,pfz=None,y=None,z=None):
         pfUz = griddata((y, z), Uz, (pfy, pfz), method='nearest')
 
         # create directory if not exists
-        out_path = 'BC_final/'+str(names[id])
+        out_path = 'BC_final/FUEL/'+str(names[id])
         try:
             if not os.path.exists(out_path):
                 os.makedirs(out_path)
@@ -181,7 +181,7 @@ def writeScalar(data_points=data_points_LES,scalar = 'CH4',pfy=None,pfz=None,y=N
             print('Check the header lines in readPoints of writeScalar')
 
         # create directory if not exists
-        out_path = 'BC_final/'+str(names[id])
+        out_path = 'BC_final/FUEL/'+str(names[id])
         try:
             if not os.path.exists(out_path):
                 os.makedirs(out_path)
@@ -238,7 +238,7 @@ def matchCenters(DNS_points,LES_points,cells=9):
 
 
 @jit
-def computeTKE_LES(LES_match_list,U_DNS_list,cells=9,nrLES = data_points_LES):
+def computeTKE_LES(LES_match_list,U_DNS_list,cells=9,nrLES = data_points_LES,max_TKE=1e6):
 
     TKE_list = np.zeros(nrLES)
 
@@ -265,13 +265,16 @@ def computeTKE_LES(LES_match_list,U_DNS_list,cells=9,nrLES = data_points_LES):
 
         TKE = (uprime/cells + vprime/cells + wprime/cells) / 2
 
+        if TKE > max_TKE:
+            TKE = max_TKE
+
         TKE_list[i] = TKE
 
     return TKE_list
 
 
 
-def writeTKE(LES_match_list):
+def writeTKE(LES_match_list,max_TKE):
     # write the TKE for each time step
     names = os.listdir('BC_precursor/FUEL/')
     names = [f for f in names if os.path.isdir('BC_precursor/FUEL/')]
@@ -285,12 +288,12 @@ def writeTKE(LES_match_list):
             # compute TKE
 
             U_vector =np.array([Ux,Uy,Uz]).T
-            TKE_list = computeTKE_LES(LES_match_list=LES_match_list, U_DNS_list=U_vector, cells=9,nrLES=data_points_LES)
+            TKE_list = computeTKE_LES(LES_match_list=LES_match_list, U_DNS_list=U_vector, cells=9,nrLES=data_points_LES,max_TKE)
         except IndexError:
             print('Check the header lines in readPoints of writeU')
 
         # create directory if not exists
-        out_path = 'BC_final/'+str(names[id])
+        out_path = 'BC_final/FUEL/'+str(names[id])
         try:
             if not os.path.exists(out_path):
                 os.makedirs(out_path)
@@ -315,7 +318,7 @@ dns_x, dns_y, dns_z = readPointsVector('points_precursor', header=0, data_points
 les_x,les_y, les_z = readPointsVector('points_LES', header=0, data_points=data_points_LES)
 
 # write the new points file
-writePointsVector(header_name='headerPoints.txt',out_path='BC_final/points', x=les_x,y=les_y,z=les_z)
+writePointsVector(header_name='headerPoints.txt',out_path='BC_final/FUEL/points', x=les_x,y=les_y,z=les_z)
 
 # interpolate and write the new U field
 writeU(data_points=data_points_LES,pfy=les_y,pfz=les_z,y=dns_y,z=dns_z)
@@ -332,5 +335,5 @@ writeScalar(data_points=data_points_LES,scalar='N2', pfy=les_y,pfz=les_z,y=dns_y
 LES_yz = np.array([les_y,les_z])
 DNS_yz  =np.array([dns_y,dns_z])
 LES_match_list = matchCenters(DNS_points=DNS_yz ,LES_points=LES_yz,cells=9)
-writeTKE(LES_match_list)
+writeTKE(LES_match_list,max_TKE=100)
 

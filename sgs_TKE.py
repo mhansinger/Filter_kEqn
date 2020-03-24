@@ -238,7 +238,7 @@ def matchCenters(DNS_points,LES_points,cells=9):
 
 
 @jit
-def computeTKE_LES(LES_match_list,U_DNS_list,cells=9,nrLES = data_points_LES,max_TKE=1e6):
+def computeTKE_LES(LES_match_list,U_DNS_list,max_TKE,cells=9,nrLES = data_points_LES):
 
     TKE_list = np.zeros(nrLES)
 
@@ -274,11 +274,13 @@ def computeTKE_LES(LES_match_list,U_DNS_list,cells=9,nrLES = data_points_LES,max
 
 
 
-def writeTKE(LES_match_list,max_TKE):
+def writeTKE(LES_match_list,max_TKE=1):
     # write the TKE for each time step
     names = os.listdir('BC_precursor/FUEL/')
     names = [f for f in names if os.path.isdir('BC_precursor/FUEL/')]
     names.sort()
+
+    this_maxTKE = max_TKE
 
     for id in range(idStart,idEnd):
         U_path ='BC_precursor/FUEL/'+str(names[id])+'/U'
@@ -288,7 +290,7 @@ def writeTKE(LES_match_list,max_TKE):
             # compute TKE
 
             U_vector =np.array([Ux,Uy,Uz]).T
-            TKE_list = computeTKE_LES(LES_match_list=LES_match_list, U_DNS_list=U_vector, cells=9,nrLES=data_points_LES,max_TKE)
+            TKE_list = computeTKE_LES(LES_match_list=LES_match_list, U_DNS_list=U_vector, max_TKE=this_maxTKE, cells=9,nrLES=data_points_LES)
         except IndexError:
             print('Check the header lines in readPoints of writeU')
 
@@ -334,6 +336,6 @@ writeScalar(data_points=data_points_LES,scalar='N2', pfy=les_y,pfz=les_z,y=dns_y
 #
 LES_yz = np.array([les_y,les_z])
 DNS_yz  =np.array([dns_y,dns_z])
-LES_match_list = matchCenters(DNS_points=DNS_yz ,LES_points=LES_yz,cells=9)
+LES_match_list = matchCenters(DNS_points=DNS_yz ,LES_points=LES_yz,cells=int(data_points_DNS/data_points_LES))
 writeTKE(LES_match_list,max_TKE=100)
 
